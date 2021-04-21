@@ -2,6 +2,7 @@
 (defn swap
   ([q pos] (assoc q (- pos 1) (q pos) pos (q (- pos 1))))
   ([q pos steps]
+   (print "q[" q "] pos[" pos "] steps[" steps "] \n" )
    (loop [res q
           cur-pos pos
           taken 0]
@@ -21,6 +22,7 @@
 ([1 2 3 4] 0)
 
 (defn get-diff [q pos expected]
+  (print "q[" q "] pos[" pos "] expected[" expected "] diff[" (- (.indexOf expected (q pos)) pos) "] \n")
   (let [value (q pos)
         expected-position (.indexOf expected value)
         ]
@@ -30,33 +32,61 @@
 (def test1-expected [1 2 5 3 7 8 4 6])
 (.indexOf test1-expected 6)
 (get-diff [1 2 5 3 7 8 6 4] 6 test1-expected)
+(get-diff [1 2 5 3 7 8 6 4] 7 test1-expected)
 (get-diff [2 1 5 3 4] 1 [1 2 3 4 5])
 (get-diff [1 2 3 4 5] 0 [1 2 3 4 5])
 
 
 (.indexOf v 2)
 
-(defn minimumBribes [q]
-  (loop [i 0
-         result 0
-         expected (loop [r []
-                         j 0]
-                    (if (< j (count q))
-                      (recur (conj r (+ j 1)) (+ j 1))
-                      r))]
-    (print "expected[" expected "] \n")
-    (if (< i (count q))
-      (let [current (q i)
-            dif (get-diff q current expected)]
-        (if (> dif 2)
-          (print "Too chaotic\n")
-          (if (<= dif 0)
-            (recur (+ i 1) result expected)
-            (recur (+ i 1) (+ result dif) (swap expected (.indexOf expected (q current)) dif))))
-        )
-      (print result "\n"))
-    )
+;; (defn minimumBribes [q]
+;;   (loop [i 0
+;;          result 0
+;;          expected (loop [r []
+;;                          j 0]
+;;                     (if (< j (count q))
+;;                       (recur (conj r (+ j 1)) (+ j 1))
+;;                       r))]
+;;     (print "count[" (count q) "] i[" i "]" " expected[" expected "] \n")
+;;     (if (< i (count q))
+;;       (let [current (q i)
+;;             dif (get-diff q i expected)]
+;;         (if (> dif 2)
+;;           (print "Too chaotic\n")
+;;           (if (<= dif 0)
+;;             (recur (+ i 1) result expected)
+;;             (recur (+ i 1) (+ result dif) (swap expected (.indexOf expected current) dif))))
+;;         )
+;;       (print result "\n"))
+;;     )
 
+;;   )
+
+(defn check-bribes [q cur-pos original]
+  ;;(print "q[" q "] cur-pos[" cur-pos "] original[" original "]\n")
+  (loop [res 0
+         i (max (- original 1) 0)]
+    (if (< i cur-pos)
+      (if (> (q i) original)
+        (recur (+ res 1) (+ i 1))
+        (recur res (+ i 1)))
+      res)))
+
+;; (check-bribes [1 2 5 3 7 8 6 4] 7 3)
+
+;; (apply vector (map #(- % 1) [ 1 2 3 4 5  ]))
+
+(defn minimumBribes [q]
+  (let [len (count q)
+        q-minus (apply vector (map #(- % 1) q))]
+    (loop [i 0
+           res 0]
+    (if (< i len)
+      (if (> (- (q-minus i) i) 2)
+        (print "Too chaotic\n")
+        (recur (+ i 1) (+ res (check-bribes q-minus i (q-minus i)))))
+      (print res "\n"))
+    ))
   )
 
 (minimumBribes [2 1 5 3 4])
